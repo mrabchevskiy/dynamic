@@ -58,6 +58,41 @@ namespace CoreAGI {
       P{}, To{}, Tt{}, Tx{}, T_{}, mutexP{}, mutexQ{}, mutant{ false }
     {}
 
+    Dynamic( const Dynamic& D ):
+      CAPACITY{ D.CAPACITY             },
+      F       { D.F                    },
+      S       { new Sample[ CAPACITY ] },
+      len     { D.len                  },
+      P       { D.P                    },
+      To      { D.To                   },
+      Tt      { D.Tt                   },
+      Tx      { D.Tx                   },
+      T_      { D.T_                   },
+      mutexP{}, mutexQ{}, mutant{}
+    {
+      for( auto i: RANGE{ len } ) S[i] = D.S[i];
+      mutant.store( D.mutant.load() );
+    }
+
+    Dynamic& operator= ( const Dynamic& D ){
+      delete[] S;
+      CAPACITY = D.CAPACITY;
+      F        = D.basis;
+      S        = new Sample[ CAPACITY ];
+      len      = D.len;
+      P        = D.P;
+      To       = D.To;
+      Tt       = D.Tt;
+      Tx       = D.Tx;
+      T_       = D.T_;
+      mutant   = D.mutant;
+      for( auto i: RANGE{ len } ) S[i] = D.S[i];
+    }
+
+   ~Dynamic(){
+      delete[] S;
+    }
+
     constexpr unsigned order() const { return N; }
 
     unsigned length() const {

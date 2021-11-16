@@ -44,11 +44,13 @@ namespace CoreAGI {
     Eigen(): Nrot{ 0 }, A{}, V{}, D{}, B{},Z{}, ord{}{
       for( unsigned i = 0; i < N; i++ ){
         ord[i] = i;
-        memset( A[i], 0, N*sizeof( Real ) );                                                                   // [m] 2021.11.11
+        // for( auto& Aij: A[i] ) Aij = 0;                                                                     // [-] 2021.11.11
+        memset( A[i], 0, N*sizeof( Real ) );                                                                   // [+] 2021.11.11
       }
     }
 
-    void clear(){ for( unsigned i = 0; i < N; i++ ) memset( A[i], 0, N*sizeof( Real ) ); }                     // [m] 2021.11.11
+    // void clear(){ for( unsigned i = 0; i < N; i++ ) for( int j = 0; j < N; j++ ) A[i][j] = 0.0; }           // [-] 2021.11.11
+    void clear(){ for( unsigned i = 0; i < N; i++ ) memset( A[i], 0, N*sizeof( Real ) ); }                     // [+] 2021.11.11
 
     void let( unsigned i, unsigned j, Real Aij ){ A[i][j]  = Aij; if( i != j ) A[j][i]  = Aij; }
     void add( unsigned i, unsigned j, Real Aij ){ A[i][j] += Aij; if( i != j ) A[j][i] += Aij; }
@@ -87,8 +89,10 @@ namespace CoreAGI {
       sort();
       Real c[N];
       const unsigned nc = spectral( c, b, condition );
+      //for( unsigned i = 0; i < nc; i++ ) printf( "\n   %2u %12.8f", i, double( c[i] ) );     // DEBUG
       Real ek[N];
-      memset( x, 0, N*sizeof( Real ) );                                                                        // [m] 2021.11.11
+      // for( unsigned i = 0; i < N; i++ ) x[i] = 0;                                                           // [-] 2021.11.11
+      memset( x, 0, N*sizeof( Real ) );                                                                        // [+] 2021.11.11
       for( unsigned k = 0; k < nc; k++ ){
         Real ck = c[ k ];
         eigenVector( ek, k );
@@ -124,7 +128,8 @@ namespace CoreAGI {
 
       Real c, g, h, s, Sm, t, tau, theta, tresh;
       for( unsigned p = 0; p < N; p++ ){
-        memset( V[p], 0, N*sizeof( Real ) );                                                                   // [m] 2021.11.11
+        // for( unsigned q = 0; q < N; q++ ) V[p][q] = 0;                                                      // [-] 2021.11.11
+        memset( V[p], 0, N*sizeof( Real ) );                                                                   // [+] 2021.11.11
         V[p][p] = 1.0;
         ord[p] = p;
       }
@@ -134,7 +139,7 @@ namespace CoreAGI {
         Z[p] = 0;
       }
       Nrot = 0;
-      for( unsigned i = 1; i <= 50; i++ ){
+      for( unsigned i = 1; i <= 50; i++ ){ //NB increase 50 to 100?
         Sm = 0.0;
         for( unsigned p = 0; p < N - 1; p++ ) for( unsigned q = p + 1; q < N; q++ ) Sm += std::abs( A[p][q] );
         if( Sm < EPS ) return true;

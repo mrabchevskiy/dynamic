@@ -1,3 +1,14 @@
+                                                                                                                              /*
+ Copyright Mykola Rabchevskiy 2021.
+ Distributed under the Boost Software License, Version 1.0.
+ (See http://www.boost.org/LICENSE_1_0.txt)
+ ______________________________________________________________________________
+
+ Timer for intervals in sec, millice, microsec, nonesec
+
+ 2021.10.04
+________________________________________________________________________________________________________________________________
+                                                                                                                              */
 #ifndef RANGE_H_INCLUDED
 #define RANGE_H_INCLUDED
 

@@ -2,9 +2,11 @@
  Copyright Mykola Rabchevskiy 2021.
  Distributed under the Boost Software License, Version 1.0.
  (See http://www.boost.org/LICENSE_1_0.txt)
- ______________________________________________________________________________
+______________________________________________________________________________
 
- Test aplication for `Dynamic` module
+ 2021.11.16
+
+ Test application for `Dynamic` module
 ________________________________________________________________________________________________________________________________
                                                                                                                               */
 #include <cstdio>
@@ -31,13 +33,35 @@ int main(){
     Desired Dynamic value:
                                                                                                                               */
     auto f = Dynamic( L, Chebyshev4 );
+
+    if( f.defined()    ) correct = false;
     if( f.order() != 4 ) correct = false;
                                                                                                                               /*
     Original function to be approximated is a second order polynomial:
                                                                                                                               */
     auto u = [&]( const Time& t )->Real{ return ( 1.0*t - 2.0 )*t + 3.0; };  // : t^2 - 2t + 3
                                                                                                                               /*
-    Make and add samples:
+    Set single sample; it should define constant value:
+                                                                                                                              */
+    {
+      printf( "\n\n TEST FOT CONSTANT VALUE DEFINED BY THE SINGLE SAMPLE\n" );
+      constexpr Real CONSTANT_VALUE{ 3.14 };
+      constexpr Time SOME_TIME     { 2.72 };
+      constexpr Time ANOTHER_TIME  { 1.00 };
+      f.update( SOME_TIME, CONSTANT_VALUE );
+      const auto V{ f( ANOTHER_TIME ) };
+      if( fabs( V - CONSTANT_VALUE ) > 1.0e-6 ){
+        correct = false;
+        printf( "\n Test result: failed; expeced %.3f but got %.3f\n", CONSTANT_VALUE, V );
+      } else {
+        printf( "\n Test result: correct\n" );
+      }
+    }
+
+    f.clear();
+    if( f.length() != 0 ){ correct = false; printf( "\n\n Clearing test failed" ); }
+                                                                                                                            /*
+    Add samples:
                                                                                                                               */
     for( auto k: RANGE{ L } ){
       const Real t{ 0.2*double( int( k )  - 5 ) };  // :time point
@@ -74,7 +98,53 @@ int main(){
     if( Rsq > EPS ) correct = false;
     printf( "\n\n Rsq %.3e  %s", Rsq, Rsq > EPS ? "unacceptable" : "acceptable" );
     printf( "\n\n Test result: %s\n", correct ? "CORRECT" : "FAILURE" );
-  };
+                                                                                                                              /*
+    Test the copy costructor and assignment operator:
+                                                                                                                              */
+    auto g{ f };
+    printf( "\n\n Constructed by copy:\n" );
+    printf( "\n  %2s %7s %7s %7s %7s \n", "#", "t  ", "orig", "proxy", "err" );
+    for( auto k: RANGE{ L } ){
+      const Real t    { 0.2*double( int( k )  - 5 ) }; // :time point
+      const Real orig { u(t)                        }; // :original    value
+      const Real proxy{ g(t)                        }; // :approximated value
+      const Real err  { proxy - orig                }; // :error
+      Rsq += err*err;
+      printf( "\n  %2i %7.2f %7.2f %7.2f %7.2f", k+1, t, orig, proxy, err );
+    }
+    auto h = f;
+    {
+      printf( "\n\n TEST: RE-APPROXIMATION WITH ASSIGNMENT BUT WITHOUT RESETTING\n"  );
+                                                                                                                            /*
+      Add samples:
+                                                                                                                              */
+      for( auto k: RANGE{ L } ){
+        const Real t{ 0.2*double( int( k )  - 5 ) };  // :time point
+        h.update( t, u( t ) );                        // :set sample
+        if( h.length() != L ) correct = false;
+      };
+                                                                                                                              /*
+      Make approximation:
+                                                                                                                              */
+      auto[ Nr, Ne, Cn, dt ] = h.process();
+      auto[ Q, To, Tt, Tx  ] = f.def();  // :Q is desired appoximation polynomial
+      printf( "\n   Number of rotations         %i",            Nr );
+      printf( "\n   Number of used eigen values %i",            Ne );
+      printf( "\n   Matrix condition number     %.2e",          Cn );
+      printf( "\n   Elapsed time                %.2f microsec", dt );
+      printf( "\n   Time range                  [ %.2f .. %.2f | .. %.2f ] sec", To, Tt, Tx );
+      printf( "\n\n Approximation:\n" );
+      printf(   "\n  %2s %7s %7s %7s %7s \n", "#", "t  ", "orig", "proxy", "err" );
+      for( auto k: RANGE{ L } ){
+        const Real t    { 0.2*double( int( k )  - 5 ) }; // :time point
+        const Real orig { u(t)                        }; // :original    value
+        const Real proxy{ h(t)                        }; // :approximated value
+        const Real err  { proxy - orig                }; // :error
+        Rsq += err*err;
+        printf( "\n  %2i %7.2f %7.2f %7.2f %7.2f", k+1, t, orig, proxy, err );
+      }
+    }
+  }
 
   {
     printf( "\n\n TEST: APPROXIMATION & EXTRAPOLATION OF THE POINT COORDINATES" );
@@ -125,18 +195,24 @@ int main(){
     printf( "\n\n POINT COORDINATES APPROXIMATION & EXTRAPOLATION:\n"  );
     printf( "\n   %2s %6s | %7s %7s %7s | %7s %7s %7s | %7s", "#", "time", "x  ", "y  ","r  ", "x  ", "y  ", "r  ", "dev  " );
     Real maxDeviation{ 0.0 };
+    RangePoint rangePoint{};
     for( auto i: RANGE{ 15 } ){
       const Time t { Time( i )             };
       const Real xi{ x( t )                };
       const Real yi{ y( t )                };
       const Real ri{ sqrt( xi*xi + yi*yi ) };
-      const Real Xi{ X( t )                };
+      const Real Xi{ X( t, &rangePoint )   };
       const Real Yi{ Y( t )                };
       const Real Ri{ hypot( Xi,    Yi    ) };
       const Real d { hypot( Xi-xi, Yi-yi ) };
       if( d > maxDeviation ) maxDeviation = d;
       printf( "\n   %2i %6.2f | %7.2f %7.2f %7.2f | %7.2f %7.2f %7.2f | %7.4f", i+1,t, xi,yi,ri, Xi,Yi,Ri, d );
-      if( i > 10 ) printf( " extrapolated" );
+      switch( rangePoint ){
+        case RangePoint::INSIDE   : printf( " inside"    ); break;
+        case RangePoint::BACKWARD : printf( " backward"  ); break;
+        case RangePoint::FORWARD  : printf( " forward"   ); break;
+        default                   : printf( " undefined" ); break;
+      }//switch
     }
     const Real trajectoryLength    { r*radians( 120.0 )     };
     const Real acceptableDeviation { trajectoryLength/100.0 };

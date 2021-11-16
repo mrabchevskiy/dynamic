@@ -4,10 +4,9 @@
  (See http://www.boost.org/LICENSE_1_0.txt)
 ________________________________________________________________________________________________________________________________
 
-  2021.11.11 Initial version
+  2021.11.16 Initial version
 ________________________________________________________________________________________________________________________________
-                                                                                                                              */
-#ifndef DYNAMIC_H_INCLUDED
+                                                                                                                              */#ifndef DYNAMIC_H_INCLUDED
 #define DYNAMIC_H_INCLUDED
 
 #include <cstring> // :memset
@@ -21,6 +20,8 @@ ________________________________________________________________________________
 #include "timer.h"
 
 namespace CoreAGI {
+
+  enum class RangePoint: unsigned { UNDEFINED = 0, BACKWARD, INSIDE, FORWARD };
 
   template< unsigned N, typename Real = double > class Dynamic {
 
@@ -37,6 +38,7 @@ namespace CoreAGI {
     const unsigned                    CAPACITY; // :queue capacity
     const PolynomialBasis< N, Real >& F;        // :basis
     Sample*                           S;        // :queue of samples
+    unsigned                          pos;      // :sample incl position
     unsigned                          len;      // :actual number of samples
     Polynomial< N, Real >             P;        // :approximation polynomial
     Time                              To;       // :extrapolation horizon
@@ -54,14 +56,18 @@ namespace CoreAGI {
       CAPACITY{ capacity               },
       F       { basis                  },
       S       { new Sample[ CAPACITY ] },
+      pos     { 0                      },
       len     { 0                      },
       P{}, To{}, Tt{}, Tx{}, T_{}, mutexP{}, mutexQ{}, mutant{ false }
-    {}
+    {
+      P.undef(); assert( not defined() );
+    }
 
     Dynamic( const Dynamic& D ):
       CAPACITY{ D.CAPACITY             },
       F       { D.F                    },
       S       { new Sample[ CAPACITY ] },
+      pos     { D.pos                  },
       len     { D.len                  },
       P       { D.P                    },
       To      { D.To                   },
@@ -79,6 +85,7 @@ namespace CoreAGI {
       CAPACITY = D.CAPACITY;
       F        = D.basis;
       S        = new Sample[ CAPACITY ];
+      pos      = D.pos;
       len      = D.len;
       P        = D.P;
       To       = D.To;
@@ -92,6 +99,8 @@ namespace CoreAGI {
    ~Dynamic(){
       delete[] S;
     }
+
+    constexpr bool defined() const { return P.defined(); }
 
     constexpr unsigned order() const { return N; }
 
@@ -109,6 +118,7 @@ namespace CoreAGI {
     void clear(){
       const std::lock_guard< std::mutex > lock( mutexQ );
       len = 0;
+      pos = 0;
       mutant.store( true );
     }
 
@@ -121,16 +131,41 @@ namespace CoreAGI {
                                                                                                                               /*
         Update queue:
                                                                                                                               */
+//        if( len < CAPACITY ){
+//          S[ len++ ] = Sample{ t, v };
+//        } else {
+//          assert( len == CAPACITY );
+//          for( auto i: RANGE{ 1u, CAPACITY } ) S[ i-1 ] = S[ i ];  // :shift
+//          S[ CAPACITY-1 ] = Sample{ t, v };
+//        }
         if( len < CAPACITY ){
-          S[ len++ ] = Sample{ t, v };
+                                                                                                                              /*
+          `len` and `pos` values are the same:
+                                                                                                                              */
+          S[ pos++ ] = Sample{ t, v };
+          len++;
         } else {
+                                                                                                                              /*
+          `len` not changed, `pos` changed cyclically:
+                                                                                                                              */
           assert( len == CAPACITY );
-          for( auto i: RANGE{ 1u, CAPACITY } ) S[ i-1 ] = S[ i ];  // :shift
-          S[ CAPACITY-1 ] = Sample{ t, v };
+          if( ++pos >= CAPACITY ) pos = 0;
+          S[ pos ] = Sample{ t, v };
         }
         L = len;
       }
-      mutant.store( true );
+      if( len == 1 ){
+                                                                                                                              /*
+        Assign approximation polynomial that actually represents constant:
+                                                                                                                              */
+        {
+          const std::lock_guard< std::mutex > lock( mutexP );
+          P = v;
+        }
+        mutant.store( false );
+      } else {
+        mutant.store( true );
+      }
       return L;
     }//update
 
@@ -140,12 +175,14 @@ namespace CoreAGI {
       Real,     // :matrix condition number
       Time      // :elapsed time, microsec
     > process(){
+
+      if( not mutant.load() ) return std::make_tuple( 0, 0, 0.0, 0.0 ); // :no changes, nothing to do
                                                                                                                               /*
       (Re)Calculate approximation:
                                                                                                                               */
       constexpr Real FACTOR{ 0.5 };
 
-      assert( mutant.load() );
+
       Time     T[ CAPACITY ];
       Real     Y[ CAPACITY ];
       unsigned L;
@@ -228,7 +265,7 @@ namespace CoreAGI {
       return std::make_tuple( nr, nc, cn, dt );
     }//process
 
-    Real operator() ( const Time& t, int* note = nullptr ){
+    Real operator() ( const Time& t, RangePoint* note = nullptr ){
                                                                                                                               /*
       Calculate approximated/extrapolated value.
       If `note` pointer defined, it value asigned:
@@ -237,8 +274,12 @@ namespace CoreAGI {
        -1 when t < To
                                                                                                                               */
       const std::lock_guard< std::mutex > lock( mutexP );
-      if( note ) *note = t > Tx ? 1 : ( t < To ? -1 : 0 );
-      return P( 2.0*( t  - To )/T_ - 1.0 ); // :mapping t:[ To, Tx ] => x:[ -1, 1 ]
+      auto value = P( 2.0*( t  - To )/T_ - 1.0 ); // :mapping t:[ To, Tx ] => x:[ -1, 1 ]
+      if( note ){
+        if( std::isnan( value ) ) *note = RangePoint::UNDEFINED;
+        else *note = t > Tx ? RangePoint::FORWARD : ( t < To ? RangePoint::BACKWARD : RangePoint::INSIDE );
+      }
+      return value;
     }//operator()
 
   };//class Dynamic

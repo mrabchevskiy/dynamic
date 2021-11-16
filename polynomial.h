@@ -4,7 +4,7 @@
  (See http://www.boost.org/LICENSE_1_0.txt)
 ________________________________________________________________________________________________________________________________
 
-  2021.11.11 Initial version
+  2021.11.16 Initial version
 ________________________________________________________________________________________________________________________________
                                                                                                                               */
 #ifndef APPROXIMATION_H_INCLUDED
@@ -12,6 +12,8 @@ ________________________________________________________________________________
 
 #include <cassert>
 #include <cmath>
+
+#include <limits>
 #include <functional>
 #include <span>
 #include <initializer_list>
@@ -30,15 +32,28 @@ namespace CoreAGI {
 
     constexpr unsigned order() const { return L; }
 
-    Polynomial( const Polynomial& P ): C{}{ for( auto i: RANGE{ L } ) C[i] = P.C[i]; }
+    constexpr Polynomial( const Polynomial& P ): C{}{ for( auto i: RANGE{ L } ) C[i] = P.C[i]; }
 
     explicit constexpr Polynomial( std::initializer_list< Real > coeff ): C{}{
       assert( coeff.size() == L );
       for( unsigned i = 0; const auto& Ci: coeff ) C[ i++ ] = Ci;
     }
 
+    constexpr bool defined() const {
+      for( auto i: RANGE{ L } ) if( std::isnan( C[i] ) ) return false;
+      return true;
+    }
+
+    void undef(){ for( auto i: RANGE{ L } ) C[i] = std::numeric_limits< Real >::quiet_NaN();  }
+
     constexpr Polynomial& operator = ( const Polynomial& P ){
       for( auto i: RANGE{ L } ) C[i] = P.C[i];
+      return *this;
+    }
+
+    constexpr Polynomial& operator = ( const Real& CONST ){
+      for( auto i: RANGE{ L } ) C[i] = 0.0;
+      C[ L-1 ] = CONST;
       return *this;
     }
 

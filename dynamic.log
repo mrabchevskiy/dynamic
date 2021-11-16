@@ -1,0 +1,120 @@
+
+
+ TEST FOT CONSTANT VALUE DEFINED BY THE SINGLE SAMPLE
+
+ Test result: correct
+
+
+ TEST: APPROXIMATION OF A POLYNOMIAL FUNCTION
+
+   Number of rotations         19
+   Number of used eigen values 4
+   Matrix condition number     5.27e+02
+   Elapsed time                9.01 microsec
+   Time range                  [ -1.00 .. 1.00 | .. 2.00 ] sec
+
+ Approximation:
+
+   #     t      orig   proxy     err 
+
+   1   -1.00    6.00    6.00   -0.00
+   2   -0.80    5.24    5.24   -0.00
+   3   -0.60    4.56    4.56   -0.00
+   4   -0.40    3.96    3.96   -0.00
+   5   -0.20    3.44    3.44   -0.00
+   6    0.00    3.00    3.00   -0.00
+   7    0.20    2.64    2.64   -0.00
+   8    0.40    2.36    2.36   -0.00
+   9    0.60    2.16    2.16   -0.00
+  10    0.80    2.04    2.04   -0.00
+  11    1.00    2.00    2.00   -0.00
+
+ Rsq 1.247e-13  acceptable
+
+ Test result: CORRECT
+
+
+ Constructed by copy:
+
+   #     t      orig   proxy     err 
+
+   1   -1.00    6.00    6.00   -0.00
+   2   -0.80    5.24    5.24   -0.00
+   3   -0.60    4.56    4.56   -0.00
+   4   -0.40    3.96    3.96   -0.00
+   5   -0.20    3.44    3.44   -0.00
+   6    0.00    3.00    3.00   -0.00
+   7    0.20    2.64    2.64   -0.00
+   8    0.40    2.36    2.36   -0.00
+   9    0.60    2.16    2.16   -0.00
+  10    0.80    2.04    2.04   -0.00
+  11    1.00    2.00    2.00   -0.00
+
+ TEST: RE-APPROXIMATION WITH ASSIGNMENT BUT WITHOUT RESETTING
+
+   Number of rotations         19
+   Number of used eigen values 4
+   Matrix condition number     5.27e+02
+   Elapsed time                6.99 microsec
+   Time range                  [ -1.00 .. 1.00 | .. 2.00 ] sec
+
+ Approximation:
+
+   #     t      orig   proxy     err 
+
+   1   -1.00    6.00    6.00   -0.00
+   2   -0.80    5.24    5.24   -0.00
+   3   -0.60    4.56    4.56   -0.00
+   4   -0.40    3.96    3.96   -0.00
+   5   -0.20    3.44    3.44   -0.00
+   6    0.00    3.00    3.00   -0.00
+   7    0.20    2.64    2.64   -0.00
+   8    0.40    2.36    2.36   -0.00
+   9    0.60    2.16    2.16   -0.00
+  10    0.80    2.04    2.04   -0.00
+  11    1.00    2.00    2.00   -0.00
+
+ TEST: APPROXIMATION & EXTRAPOLATION OF THE POINT COORDINATES
+
+ X approximation:
+
+   Number of rotations         66
+   Number of used eigen values 6
+   Matrix condition number     1.06e+05
+   Elapsed time                36.62 microsec
+   Time range                  [ 0.00 .. 10.00 | .. 15.00 ] sec
+
+ Y approximation:
+
+   Number of rotations         66
+   Number of used eigen values 6
+   Matrix condition number     1.06e+05
+   Elapsed time                33.88 microsec
+   Time range                  [ 0.00 .. 10.00 | .. 15.00 ] sec
+
+ POINT COORDINATES APPROXIMATION & EXTRAPOLATION:
+
+    #   time |     x       y       r   |     x       y       r   |   dev  
+    1   0.00 |   10.00    0.00   10.00 |   10.00    0.00   10.00 |  0.0000 inside
+    2   1.00 |    9.88    1.56   10.00 |    9.88    1.56   10.00 |  0.0001 inside
+    3   2.00 |    9.51    3.09   10.00 |    9.51    3.09   10.00 |  0.0001 inside
+    4   3.00 |    8.91    4.54   10.00 |    8.91    4.54   10.00 |  0.0001 inside
+    5   4.00 |    8.09    5.88   10.00 |    8.09    5.88   10.00 |  0.0000 inside
+    6   5.00 |    7.07    7.07   10.00 |    7.07    7.07   10.00 |  0.0001 inside
+    7   6.00 |    5.88    8.09   10.00 |    5.88    8.09   10.00 |  0.0000 inside
+    8   7.00 |    4.54    8.91   10.00 |    4.54    8.91   10.00 |  0.0001 inside
+    9   8.00 |    3.09    9.51   10.00 |    3.09    9.51   10.00 |  0.0001 inside
+   10   9.00 |    1.56    9.88   10.00 |    1.56    9.88   10.00 |  0.0001 inside
+   11  10.00 |    0.00   10.00   10.00 |    0.00   10.00   10.00 |  0.0000 inside
+   12  11.00 |   -1.56    9.88   10.00 |   -1.56    9.88   10.00 |  0.0020 inside
+   13  12.00 |   -3.09    9.51   10.00 |   -3.08    9.52   10.01 |  0.0088 inside
+   14  13.00 |   -4.54    8.91   10.00 |   -4.52    8.93   10.01 |  0.0261 inside
+   15  14.00 |   -5.88    8.09   10.00 |   -5.84    8.14   10.02 |  0.0627 inside
+
+   Trajectory length        20.944 m
+   Acceptable 1% deviation   0.209 m
+   Max deviation             0.063 m
+
+ Test result: CORRECT
+
+ Verdict: CORRECT

@@ -131,13 +131,6 @@ namespace CoreAGI {
                                                                                                                               /*
         Update queue:
                                                                                                                               */
-//        if( len < CAPACITY ){
-//          S[ len++ ] = Sample{ t, v };
-//        } else {
-//          assert( len == CAPACITY );
-//          for( auto i: RANGE{ 1u, CAPACITY } ) S[ i-1 ] = S[ i ];  // :shift
-//          S[ CAPACITY-1 ] = Sample{ t, v };
-//        }
         if( len < CAPACITY ){
                                                                                                                               /*
           `len` and `pos` values are the same:

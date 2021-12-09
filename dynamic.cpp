@@ -6,6 +6,8 @@ ______________________________________________________________________________
 
  2021.11.16
 
+ 2021.12.08 Assignment text added
+
  Test application for `Dynamic` module
 ________________________________________________________________________________________________________________________________
                                                                                                                               */
@@ -112,6 +114,7 @@ int main(){
       Rsq += err*err;
       printf( "\n  %2i %7.2f %7.2f %7.2f %7.2f", k+1, t, orig, proxy, err );
     }
+
     auto h = f;
     {
       printf( "\n\n TEST: RE-APPROXIMATION WITH ASSIGNMENT BUT WITHOUT RESETTING\n"  );
@@ -143,6 +146,14 @@ int main(){
         Rsq += err*err;
         printf( "\n  %2i %7.2f %7.2f %7.2f %7.2f", k+1, t, orig, proxy, err );
       }
+    }
+    printf( "\n\n TEST FOR ASSIGNMENT " );
+    try {
+      f = h;
+      printf( " [ok]\n" );
+    } catch(...){
+      printf( " [failed]\n" );
+      correct = false;
     }
   }
 

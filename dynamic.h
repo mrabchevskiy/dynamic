@@ -5,6 +5,8 @@
 ________________________________________________________________________________________________________________________________
 
   2021.11.16 Initial version
+
+  2021.12.08 Assignment operator fixed
 ________________________________________________________________________________________________________________________________
                                                                                                                               */#ifndef DYNAMIC_H_INCLUDED
 #define DYNAMIC_H_INCLUDED
@@ -35,7 +37,8 @@ namespace CoreAGI {
       bool operator!= ( const Sample& S ) const { return t != S.t; }
     };
 
-    const unsigned                    CAPACITY; // :queue capacity
+//  const unsigned                    CAPACITY; // :queue capacity
+    unsigned                          CAPACITY; // :queue capacity
     const PolynomialBasis< N, Real >& F;        // :basis
     Sample*                           S;        // :queue of samples
     unsigned                          pos;      // :sample incl position
@@ -80,10 +83,13 @@ namespace CoreAGI {
       mutant.store( D.mutant.load() );
     }
 
-    Dynamic& operator= ( const Dynamic& D ){
+    Dynamic& operator= ( const Dynamic& D ){                                                                   // [m] 2021.12.08
+                                                                                                                              /*
+      Assignment can be done only when both sides use the same functional basis:
+                                                                                                                              */
+      if( &F != &D.F ) throw std::invalid_argument( "Functional basises must be identical" );
       delete[] S;
       CAPACITY = D.CAPACITY;
-      F        = D.basis;
       S        = new Sample[ CAPACITY ];
       pos      = D.pos;
       len      = D.len;
@@ -92,8 +98,9 @@ namespace CoreAGI {
       Tt       = D.Tt;
       Tx       = D.Tx;
       T_       = D.T_;
-      mutant   = D.mutant;
+      mutant.store( D.mutant.load() );
       for( auto i: RANGE{ len } ) S[i] = D.S[i];
+      return *this;
     }
 
    ~Dynamic(){
@@ -131,6 +138,13 @@ namespace CoreAGI {
                                                                                                                               /*
         Update queue:
                                                                                                                               */
+//        if( len < CAPACITY ){
+//          S[ len++ ] = Sample{ t, v };
+//        } else {
+//          assert( len == CAPACITY );
+//          for( auto i: RANGE{ 1u, CAPACITY } ) S[ i-1 ] = S[ i ];  // :shift
+//          S[ CAPACITY-1 ] = Sample{ t, v };
+//        }
         if( len < CAPACITY ){
                                                                                                                               /*
           `len` and `pos` values are the same:
